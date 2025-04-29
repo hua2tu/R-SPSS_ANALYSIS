@@ -1,0 +1,640 @@
+R语言实战
+第一章 R语言介绍
+R的优点：免费；提供各种数据分析技术；可交互式的数据分析与探索平台；可从多个数据源获取并转换；可自我编写新的函数与统计方法；可整合其他语言的应用程序；可运行在多平台。
+R编程中常见的错误：
+    使用错误大小写；忘记使用必要的引号；使用函数忘记括号；文件路径中使用\；使用未加载的包
+常见的注意事项：
+    对象名称中的句点（.）没有特殊意义；但是美元符号($)是有着与其他语言中的句点类似含义；
+    不提供多行注释，只有每行注释以#开始；
+    没有标量；变量无法声明，即在被赋值时生成；下标从1开始，而不是从0开始；
+包与库   包：R函数、数据、预编码以一种定义完善的格式组成的集合；
+        库：计算机上存储包的目录；
+        包的安装、卸载，载入：install.package(packagename);uninstall.package();librar()    
+R中常用的系统相关函数：help.start()     help("...")  example("...")
+    getwd()     setwd("newdirection")   显示/修改当前的工作目录（work direction）
+    options()   help(options)    save(object,file="filename")   load("myfile")  q()退出R
+图形输出pdf("filename.pdf")    jepg("filename.jpg") 
+
+
+第二章：创建数据集
+    1.可手动输入，2.从其他文件（文本文件，电子表格，其他统计软件，数据库管理系统）导入（常用）
+数据集是由数据构成的一个矩形数组，行为观测，列为变量；
+    常包括：第一列：行标识符；第一行：变量名；；    
+        变量类型有：连续型/有序型/名义型/日期型  变量；  其中有序型/名义型又称为因子；
+        数据类型：数值型/字符型/逻辑型/复数型；
+        储存数据的对象类型有：向量；矩阵；数组；数据框；列表
+        向量：c()  数据为相同类型；标量是只含一个元素的向量
+        矩阵：二维数组   matrix(vector,nrow=n1,ncol=n2,byrow=TRUE/FALSE,dimnames=list(char_vector_rownames,char_vector_colnames))   
+        数组：多维数组   array(vector,dimensions,dimnames)
+        数据框（最常用）: data.frame(col1,col2....)   数据类型可以多种
+        列表：就是一些对象(上述对象类型)/成分的有序集合   list(object1,object2...)
+    attach(dfname)  deattach(dfname)  将数据框在R的搜索路径中添加/移出
+    with(dfname,{})
+有序型/名义型变量转换为因子：
+    factor(var,levels=c(1,2,3..),labels=c("name1","name2","name3"...)order=TRUE/FALSE)
+编辑数据框：   edit(mydata)   fix(mydata)
+导入数据：
+    1.从带分隔符的文本文件中导入    mydata<-read.table(file,options)
+        options包括：header=TRUE/FALSE,sep=" /,/\t",row.names=,col.names=,stringsAsFactors=TRUE/FALSE,quote,ship;
+    2.从excel文件中导入      mydata<-read.xlsx()     openxlsx包（不依赖Java）
+    3.从SPSS文件中导入      mydata<-read.spss()    以下均是foreign包
+    4.从SAS文件中导入      mydata<-read.ssd()
+    5.从Stata文件中导入      mydata<-read.dta()
+处理字符串常用函数： length/dim/str/mode/names/head/tail(object)        Is()显示当前对象列表
+                    对象的数量（长度）/维度/结构/模式/名称/开始部分（开始的5个观测）/结尾部分（最后5个观测）
+
+
+第三章：图形初阶
+    通过函数par（no.readonly=TRUE）可以生成一个修改当前图形参数列表；
+图形参数：定义一幅图形的多个特征（字体、颜色、坐标轴、标签）
+    1.符号与线条
+        pch=1-25   常用18，19，20    指定绘制点的符号
+        cex=n      n为数值，相对于默认大小的缩放倍数   指定符号大小
+        lty=1-6  常用 1-3    指定线条类型
+        lwd=n       n为数值，相对于默认大小的缩放倍数   指定线条宽度
+    2.颜色
+        col="red"/rgb(0,0,0)
+        col.axis/lab/main     fg 前背景色    bg后背景色
+    3.文本属性
+        cex=n     指定文本大小    cex.axis/lab/main
+        font=1-5  指定文本字体    font.axis/lab/main
+    4.图形与边界尺寸
+        pin=c(n1,n2)     图形尺寸（宽，高）  单位英寸
+        main=c(n1,n2,n3,n4)    图形边界大小（下、左、上、右）    单位英寸
+        mar=c(n1,n2,n3,n4)     图形边界大小（下、左、上、右）    单位英分
+    5.添加文本、图例等
+        main=""        xlab=""          ylab=""     xlim=c()      ylim=c()
+        添加参考线    abline(h=y_valaue,v=x_value,lty=,col=...)
+        添加图例      legend(location,title,legend)
+        文本注标      text(location,pos=1-4,side=1-4)      1-4代表下左上右
+    6.组合图形     par(mfrow=c(nrows,ncols))   按行填充的，行数与列数的图形矩阵
+
+
+第四章：基本数据管理
+    1.重命名     names(varname)<-"new_varname"
+    2.函数is.na()  允许检测缺失值是否存在
+          na.omit()  移出所有含有缺失值的观测
+          na.rm=TRUE选项  在计算之前移除缺失值并使用剩余值进行计算
+    3.字符串转日期    as.Date(x,myformat)    myformat<-"%d%m%y"
+        %d%m%y%Y%a%A%b%B    天/月/年（两位数）/年（四位）/缩写星期/完整星期/缩写月份/完整月份
+        Sys.Date()      返回当天日期
+        date()          返回当前日期与时间  
+        difftime（）    计算时间间隔
+    4.类型判断，返回逻辑值
+        is.numeric/character/matrix/data.frame/factor()
+    5.类型转换，返回新数据类型
+        as.numeric/character/matrix/data.frame/factor()
+    6.数据排序   dfname[order(varname),] 
+    7.数据合并--添加列     total<-merge(dfname1,dfname2,by="ID")
+    8.数据合并--添加行     total<-rbind(dfname1,dfname2)
+注意：NULL表示未定义      NA表示缺少
+
+
+第五章高级数据管理
+    1.常用的数学函数
+        abs/sqrt/ceiling/floor/sin/cos(x)    绝对值/平方根/不小于x的最小整数/不大于x的最大整数
+        round(x,digits=n)                 
+        log(x) 自然对数      log10(x) 常用对数    log(x,base=n)  对x取n为底的对数     exp(x)  指数
+    2.统计函数
+        mean/median/sd/var/range/sum/max/min(x)      sd/var/range  标准差/方差/值域
+        scale(x,center=TRUE,scale=TRUE)   对x进行center=TRUE（中心化）或center=TRUE,scale=TRUE（标准化）
+    3.其他实用函数
+        length(x) 对象x长度        seq(from,to,by) 生成一个序列      rep(x,n) 将x重复n次    cut(x,n) 将连续性变量x分割为n个水平的因子
+    4.将函数应用于矩阵与数据框
+        apply(x,MARGIN,FUN) 函数应用到数组的某一维度      MARGIN:维度下标（常用1表示行，2表示列，3表示第3维度）        FUN：指定函数
+        sapply(x,FUN，options)        函数应用到列表中
+    5.数据转置（反转行与列）       t（dfname）
+    6.数据整合     aggregate(x,by,FUN)      x是待折叠的数据对象；by是一个变量名组成的列表；FUN是用来计算描述性统计量的函数
+                例：aggdata<-aggregate(mtcars,by=list(cyl,gear),FUN=mean)
+    7.数据重构(P106)      melt(mydata,id=c("ID"))
+     reshape2包     dcast(mydata,formula,fun.aggregate)
+
+
+第6章基本图形
+    1.条形图   barplot(counts,horiz=TRUE/FALSE(默认)，beside=TRUE/FALSE(默认))      horiz：水平/简单图    beside：分组/堆砌图
+    2.饼图     pie(x,labels)     x表示各扇形面积；labels表示各扇形的标签字符型向量
+    3.直方图   hist(x,breaks=n)       breaks控制组的数量
+                rug(jitter(varname))   为直方图添加轴须图
+    4.核密度图  plot(density(x))
+        sm包    sm.density.compare(x,factor)     比较两组及跟多组的核密度图，用于比较组间差异
+    5.箱线图    boxplot(formula,data=dataframe,varwidth=TRUE/FALSE(默认),notch=TRUE/FALSE(默认))
+                用于多组比较，varwidth使箱线图的宽度与其样本大小的平方根成正比；notch用于添加凹槽
+    6.点图      dotplot(x,labels)     其中常用labels=row.names(dfname)
+    7.棘状图    vcd包   spine(counts)
+    8.扇形图    plotrix包   fan.plot(slices,labels)
+
+
+第七章基本统计分析   subset(test,V1 >=5 & V2 >= 18) 
+    1.描述性统计
+        summary（varname）  提供了最大、最小值，四分位数与均数及频数统计
+    pastecs包   stat.desc(x,basic=TRUE,desc=TRUE,norm=FALSE,p=0.95)   
+                basic计算基本值，desc计算均数、标准误等，norm进行正态性检验，p值计算均数的置信区间
+    2.分组计算描述性统计
+        使用aggregate（）    例  aggregate(varname,by=list(name1=groupvar1,name2=groupvar2...))
+        使用aggregate（）    例  by(dfname[vars_name],INDICES,FUN)   INDICES是一个因子或因子组成的列表
+    psych包   describeBY(varname,list()) 
+    3.创建与处理列联表函数
+        table(var1,var2...)         xtabs(formula,data)
+        prop.table(table,margins)  生成边际比例    margins为n：表示table中的第n个变量    margin.table(table,margins)  生成边际频数
+        addmargins(table,margins)  求和结果添加到表中        ftable(table)  创建一个紧凑的平铺列联表
+    4.分析性统计
+        卡方检验     chisq.test(mydtable)
+        fisher检验       fisher.test(mydtable)
+        Cochran-Mantel-Haenszel检验     mantelhaen.test(mydtable)
+        分类变量的相关性：
+        vcd包    assocstats(mydtable)    计算二维列表这的phi系数，列联系数，CramersV系数
+                kappa()                 对两评价者对于一系列对象分类所得结果的一致性程度
+        连续变量的相关性：
+            cor()函数可以计算这三种相关系数（Pearson/Spearman/Kendall相关系数），而cov()函数可用来计算协方差
+            cor(x,use="everthing"（默认）,method="pearson"（默认）)   
+            相关性检验： cor.test(x,y,alternative="two.side"（默认）,method="pearson"（默认）)      alternative="less"/"greater"    method="spearman"/"kendall"
+        注：psych包    cor.test(dfname,use="complete"/"pairwise",method="pearson"（默认）)每次只能检验一种相关关系。但psych包中提供的corr.test()函数可以一次做更多事情 
+        独立性t检验     t.test(y~x,data=，alternative="two.side"（默认）)    x为二分类变量，y是连续性变量
+        非独立样本t检验     t.test(y~x,data=""，paired=TRUE,alternative="two.side"（默认）)  
+        两组非参数检验      wilcox.test(y~x,data=)     Mann-White U检验   两组独立样本
+        多组非参数检验      kruskal.test(y~x,data=)    Kruskal-Wallis检验   多组独立样本
+                            friedman.test(y~A|B,data=)   Friedman       多组相关样本
+
+第八章回归
+包括简单线性/多元线性/非线性/非参数/多项式/多变量/Logistic/泊松/Cox比例风险/时间序列/稳健
+OLS回归（普通最小二乘回归法）      数据必须满足独立性、线性、正态性、方差齐性
+    myfit<-lm(formula,data=)      formula格式：Y~X1+X2+....
+        符号  x：z 交互性      x*z 所有可能的交互项    . 包含除因变量外的所有变量      - 移除某变量    -1 删除截距项
+    拟合线性模型后常用的函数：
+        summary/coef/confint/fitted/residual/predict/anova/AIC/plot(myfit)
+        拟合结果详细信息/模型参数/参数置信区间/预测值/残差/预测/模型的方差分析图/AIC值/诊断图
+    回归诊断：par(mfrow=c(2,2))     plot（myfit）   共生成4张图
+        Residuals vs Fitted    线性关系
+        Normal Q-Q              正态性检验（所有点应在45度线上）
+        Scale-Location          方差齐性检验（水平线周围点应随机分布）
+        Residuals vs Leverage       鉴别离群点、高杠杆值点、强影响点
+    回归诊断的改进方法：
+    car包   qqplot()     QQ图，正态性检验
+            durbinWatsonTest()   Durbin-Watson检验    独立性
+            crPlots()                      成分与残差图  线性
+            ncvTest()       spreadLevelPlot()     方差齐性检验
+            influencePlot()    鉴别离群点、高杠杆值点、强影响点
+    多重共线性   car包     vif（myfit）          VIF>10   代表自变量间有共线性
+    模型比较：
+        anova函数比较：     anova（fit1，fit2...）
+        AIC(赤池信息准则)比较     AIC(fit1,fit2...)    AIC值较小的模型优先选择，说明模型用较少的参数获得了足够的拟合度
+    变量的选择：
+        1.（向前/向后/向前向后）逐步回归法：模型添加/删除一个变量，直到达到某个判停准则为止
+        MASS包   stepAIC(fit,direction="backward"/forward"/"both")
+        2.全子集回归：所有可能的模型都会被检验
+        leaps包   regsubsets(formula,data=,nbest=n)
+    交叉验证:将一定比例的数据挑选出来作为训练样本，另外的样本作保留样本，先在训练样本上获取回归方程，然后在保留样本上做预测
+    在k重交叉验证中，样本被分为k个子样本，轮流将k-1个子样本组合作为训练集，另外1个子样本作为保留集。这样会获得k个预测方程，记录k个保留样本的预测表现结果，然后求其平均值。
+    bootstrap包     crossval()
+
+
+第九章方差分析
+aov(formula,data=dfname)      小写字母表示定量变量，大写字母表示组别因子
+    formula格式：  y~A   单因素ANOVA
+        y~x+A   含协变量单因素分析           y~A*B   双因素ANOVA分析        y~B+A  随机化区组方差分析（B是区组因子）
+        例：y~A+B+A:B    R中的ANOVA分析结果的评价：1 A对y的影响；2 控制A时，B对y的影响  3 控制A与B的主效应时，A与B的交互效应
+    不同组间样本量相同的设计为均衡设计；不同组间样本量不相同的设计为非均衡设计；组间样本量越不平衡，效应项的顺序对结果的影响越大
+单因素方差分析    注意：分类变量应进行因子转换  factor（）
+    1 table（A）      查看各样本量大小
+    2 aggregate（y，by=list(A),FUN=mean） 查看各组均值
+    3 aggregate（y，by=list(A),FUN=sd）    查看各组标准差
+    4 fit<-aov(y~A)         检验组间差异
+    5 TukeyHSD（fit）       进行多重比较     或者 multcomp包   glht(fit,linfct=mcp(A="Turkey"))
+    gplots包   plotmeans(y~A,xlab="",ylab="",main="")   绘制各组均值及其置信区间图
+    评估检验的假设条件：
+        1 正态性        qqplot(lm(y~A,data=)，simulate=TRUE,main="")
+        2 方差齐性检验（易受离群值影响）   bartlett.test(y~A,data=)
+        3 离群值检验        car   outlinerTest(fit)
+协方差分析：
+    1 结果中获取调整的组均值，即去除协变量效应后的组均值：  effects包 effects("A",fit)
+    评估检验的假设条件：正态性，方差齐性，回归斜率相同（即无交互作用）
+    可视化    HH包 ancova(y~x+A,data=)   绘制因变量、协变量与因子间的关系图
+双因素方差分析：
+    过程如单因素类似，其中展示双因素方差分析的交互效应   interaction.plot(A1,A2,y,type="b",col=c("red","blue"),pch=c(),main="")    
+多元方差分析：
+    A<-factor(A)       y<-cbind(y1,y2,y3...)
+    aggregate（y，by=list(A),FUN=mean）    aggregate（y，by=list(A),FUN=sd）
+    cov(y)    fit<-manova(y~A,data=)   summary(fit)
+    评估检验的假设条件：多元正态性，方差-协方差矩阵同质性（用Box s M检验）
+稳健单因素多元方差分析：    rrcov包     Wilks.test(y,A,method="mcd") 
+    vegan包    adonis()进行非参数多元方差分析 
+
+
+第十章功效分析   使用pwr包
+在统计假设检验中，首先要对总体分布参数设定一个假设（零假设，H0），然后从总体分布中抽样，通过样本计算所得的统计量来对总体参数进行推断。
+假定零假设为真，如果计算获得观测样本的统计量的概率非常小，便可以拒绝原假设，接受它的对立面（称作备择假设或者研究假设，H1）。
+在研究过程时，研究者通常关注四个量：样本大小、显著性水平、功效和效应值；
+在功效分析中研究设计的四个基本量。给定任意三个，你可以推算第四个
+❏ 样本大小指的是实验设计中每种条件/组中观测的数目。
+❏ 显著性水平（也称为alpha）由Ⅰ型错误的概率来定义。也可以把它看作发现效应不发生的概率。
+❏ 功效通过1减去Ⅱ型错误的概率来定义。我们可以把它看作真实效应发生的概率。
+❏ 效应值（最难规定）指的是在备择或研究假设下效应的量。效应值的表达式依赖于假设检验中使用的统计方法。
+n样本量  sig.level显著性水平    power功效   type检验类型（有"two.sample"（默认），"one.sample","paired"）    alternative （双侧检验（默认）"two.side"    单侧检验"less"/"greater"） 
+t检验：
+    两组样本量相同：   pwr.t.test(n=,d=,sig.level=,power=,type=,alternative=)      d效应值
+    两组样本量不同：   pwr.t.test(n1=,n2=，d=,sig.level=,power=,type=,alternative=)      d效应值
+方差分析：pwr.anova.test(k=,n=,f=,sig.level=,power=)    k是组数   f是效应值
+相关性：pwr.r.test(n=,r=,sig.level=,power=,alternative=)  r是效应值
+线性模型：pwr.f2.test(u=,v=,f2=，sig.level=,power=)     u是分子自由度  v是分母自由度  f2是效应值
+比例检验：pwr.2p.test(h=,n=,sig.level=,power=)   h是效应值
+卡方分析：pwr.chisq.test(w=,N=,df=,sig.level=,power=)
+在新情况选择合适的效应值        绘制功效分析图  P232
+
+
+第11章中级绘图
+散点图
+    car包： scatterplot(y~x|A,data=,lwd=,lty=,span=n,main="",legend.plot=TRUE,id.method="identify",labels=row.names(y),boxplots="xy")
+            span 控制loss曲线的平滑量；legend.plot=TRUE在左边界添加图例；id.method可通过鼠标单击来交互式识别数据点；labels表明可通过点的行名称来识别点；boxplots添加边界箱线图
+    矩阵散点图：car包： scatterplotMatrix(~x1+x2+x3...,data=,spread=FALSE,smoother.args=list(lty=2),main="")
+                        spread=FALSE表示不添加展示分散度和对称信息的直线,smoother.args=list(lty=2)设定平滑（loess）拟合曲线使用虚线
+    高密度散点图：smoothScatter(x,y,data=,main="")   利用核密度估计生成用颜色密度来表示点分布的散点图
+    三维散点图：scatterplot3d包：scatterplot3d(x,y,z,pch=,type=,highlight.3d=TRUE,data=,main="")
+                   向图形中添加回归面    fit<-lm(x~y+z)     s3d$plane3d(fit)
+    气泡图：先创建一个二维散点图，然后用点的大小来代表第三个变量的值。
+        symbols(x,y,circle=radius,inches=n,fg=,bg=,main="")   radius/r=sqrt(x/pi)  inches是比例因子，控制圆圈大小
+        text(x,y,rownames(dfname),cex=0.6)      添加各个圆圈的名称
+折线图 plot(x,y,data=,type="",main="")   type的类型有 p 只有点  l只有线  o 实心点与线（线覆盖了点） b线连接点（最常用）  c有线无点  s阶梯图  h直方图式垂直线  n不生成任何的点与线 
+相关系数矩阵图  corrgram包   corrgram(dfname,order=TRUE,lower.panel=,upper.panel=,text.panel=,main="")
+            order=TRUE相关矩阵将使用主成分分析法对变量重排序，这将使得二元变量的关系模式更为明显。
+            lower/upper.panel设定非对角线面板使用的元素类型。panel的值有：panel.pie/shade/ellipse/pts/conf/NULL
+            text/diag.panel选项控制着主对角线元素类型   panel的值有：panel.txt/minmax/density
+马赛克图   vcd包   mosaic(formula,data=,legend=TRUE/FALSE)
+
+
+第12章重抽样与自助法
+适用于比如数据抽样于未知或混合分布、样本量过小、存在离群点、基于理论分布设计合适的统计检验过于复杂且数学上难以处理等情况;不过，如果初始样本对感兴趣的总体情况代表性很差，即使是置换检验也无法提高推断效果。
+置换检验，又称随机化检验/重随机化检验    需用到coin和lmPerm包
+corrperm包提供了有重复测量的相关性的置换检验。logregperm包提供了Logistic回归的置换检验。另外一个非常重要的包是glmperm，它涵盖了广义线性模型的置换检验。
+    注意，置换方法和参数方法都计算了相同的t统计量。但置换方法并不是将统计量与理论分布进行比较，而是将其与置换观测数据后获得的经验分布进行比较，根据统计量值的极端性判断是否有足够的理由拒绝零假设。
+    coin包对于独立性问题提供了一个非常全面的置换检验的框架；
+    lmPerm包则专门用来做方差分析和回归分析的置换检验。
+请牢记：置换检验都是使用伪随机数来从所有可能的排列组合中进行抽样（当作近似检验时）。因此，每次检验的结果都有所不同。在R中设置随机数种子便可固定所生成的随机数。这样在你向别人分享自己的示例时，
+        结果便可以重现。设定随机数种子为1234（即set.seed(1234)
+用coin包做置换检验：   function_name(formula,data=,distribution=)  distribution="exact"（精确）/"asymptotic"（渐进分布）/"approxiamate(B=#)"（蒙特卡洛重抽样）
+    独立两样本    t.test(y~A,data=,var.equal=TRUE)
+    K样本检验     wilcox_test(y~A,data=,distribution=)
+    单因素方差分析  oneway_test(y~A,data=,distribution=)
+    卡方检验       chisq_test(B~A,data=,distribution=)
+    数值间相关性   spearman_test(y~x,data=,distribution=)
+    样本间相关性检验   wilcoxsign_test(B~A,data=,distribution=)
+用lmPerm包做置换检验： fit<-function_name(formula,data=,perm=)
+lmp()和aovp()函数及其参数与lm()和aov()函数类似，只额外添加了perm=参数。perm=有Exact（精确，适用于小样本，n<10）、Prob(n>10)或SPR(使用序贯概率比检验来判断何时停止抽样)。
+    简单线性回归的置换检验：fit<-lmp(y~x,data=,perm=)
+    多项式回归             fit<-lmp(y~x+x^2,data=,perm=)
+    多元回归：             fit<-lmp(y~x1+x2+x3...,data=,perm=)
+    单因素方差分析：        fit<-aovp(y~A,data=,perm=)
+    协方差分析：            fit<-lmp(y~A+x,data=,perm=)
+    双因素方差分析：        fit<-lmp(y~A*B,data=,perm=)
+置换检验点评：boot包     
+自助法：即从初始样本重复随机替换抽样，生成一个或一系列待检验统计量的经验分布。
+无需假设一个特定的理论分布，便可生成统计量的置信区间，并能检验统计假设。
+bootobject<-boot(data=,statistic=,R=,formula=)        statistic=是生成的统计量以供自举的函数,R=是自助抽样次数，常用1000
+boot.ci(bootobject,conf=0.95,type=norm/basic/stud/bca/all)
+注意：只要样本能够较好地代表总体，初始样本大小为20~30即可得到足够好的结果。
+      R=1000次重复在大部分情况下都可满足要求。
+
+
+第13章广义线性模型
+重点关注该框架中两种流行的模型：Logistic回归（因变量为类别型）和泊松回归（因变量为计数型）
+函数基本形式：glm(formula,family=family(link=function),data=)
+family(概率分布)与link_function（连接函数）
+    family：        binomial      gaussian            gamma        poisson      quasibinomial  quasipoisson
+    link_function  link="logit"  link="identity"   link="inverse"  link="log"   link="logit"    link="log"
+与glm（）连用的函数有：summary/coef/confint/residuals/predict/deviance/anova/plot(fit)
+Logistic回归：二项/多项/序数/稳健
+dfname<-as.data.frame(raw_data)       summary(dfname)    A<-factor(A)    table（A）
+myfit<-glm(A~x1+x2+B+C...,data=dfname,family=binomial())       summary(fit)           anova(fit1.fit2,test="Chisq")
+过度离势，即观测到的响应变量的方差大于期望的二项分布的方差。过度离势会导致奇异的标准误检验和不精确的显著性检验。
+    检测过度离势的一种方法是比较二项分布模型的残差偏差与残差自由度 接近1表示没有过度趋势；比1大很多，你便可认为存在过度离势     
+        deviance(fit.reduced)/df.residual(fit.reduced)
+    当出现过度离势时，仍可使用glm()函数拟合Logistic回归，但此时需要将二项分布改为类二项分布（quasibinomial distribution）
+泊松回归：   扩展：时间段变化/零膨胀/稳健的泊松分布
+    myfit<-glm(N~x1+x2+B+C...,data=dfname,family=poisson())
+    泊松分布的方差和均值相等。当响应变量观测的方差比依据泊松分布预测的方差大时，泊松回归可能发生过度离势
+    产生过度离势的原因有：遗漏某个重要的预测变量；可能因为事件相关；重复数据中由于内在群聚特性引起；
+    deviance(fit.reduced)/df.residual(fit.reduced)
+    使用类泊松（quasi-Poisson）方法所得的参数估计与泊松方法相同，但标准误变大了许多。
+
+
+第14章主成分分析与因子分析
+主成分分析（PCA）是一种数据降维技巧，它能将大量相关变量转化为一组很少的不相关变量，这些无关变量称为主成分
+探索性因子分析（EFA）是用来发现一组变量的潜在结构的方法。它通过寻找一组更小的、潜在的或隐藏的结构来解释已观测到的、显式的变量间的关系
+主成分（PC1和PC2）是观测变量（X1到X5）的线性组合
+因子（F1和F2）被当作观测变量的结构基础或“原因”，而不是它们的线性组合
+因子分析需要5~10倍于变量数的样本数
+psych包中关于主成分/因子分析常用的函数
+    principal()  主成分分析             fa()  因子分析
+    fa.parallel() 含平行分析的碎石图               factor.plot()   因子/主成分分析的结果
+    fa.diagram()   因子/主成分分析的载荷矩阵       scree()   因子/主成分分析的碎石图
+最常见的步骤：
+    (1) 数据预处理
+    (2) 选择因子模型。判断是PCA（数据降维）还是EFA（发现潜在结构）
+    (3) 判断要选择的主成分/因子数目。
+    (4) 选择主成分/因子。
+    (5) 旋转主成分/因子。
+    (6) 解释结果。
+    (7) 计算主成分或因子得分。
+主成分分析：
+    1 判断主成分的个数：（最常见的是基于特征值的方法）
+    Kaiser-Harris准则建议保留特征值大于1的主成分。
+    Cattell碎石检验则绘制了特征值与主成分数的图形，在图形变化最大处之上的主成分都可保留。
+    ❏ 根据先验经验和理论知识判断主成分数；
+    ❏ 根据要解释变量方差的积累值的阈值来判断需要的主成分数；
+    ❏ 通过检查变量间k×k的相关系数矩阵来判断保留的主成分数。
+    2 提取主成分： principal(r,nfactors=,rotate="varimax"（默认）,scores=FALSE（默认）)   r是原始数据/相关系数矩阵；scores是计算主成分得分
+        结果中PC1包含了成分载荷，指观测变量与主成分的相关系数。成分载荷可用来解释主成分的含义。第一主成分（PC1）与每个变量都高度相关
+        h2成分公因子方差，即主成分对每个变量的方差解释度。u2栏指成分唯一性，即方差无法被主成分解释的比例（1-h2）
+        SS loadings包含了与主成分相关联的特征值，指的是与特定主成分相关联的标准化后的方差值；
+        Proportion Var表示的是每个主成分对整个数据集的解释程度。
+    3 含平行分析的碎石图
+        fa.parallel(r,n.obs=n,fa="pc",n.iter=100,show.legend=FALSE,main="")    n是观测数
+    4 主成分旋转
+    旋转是一系列将成分载荷阵变得更容易解释的数学方法，它们尽可能地对成分去噪。
+    旋转方法有两种：使选择的成分保持不相关（正交旋转），和让它们变得相关（斜交旋转）；最流行的正交旋转是方差极大旋转
+    5 获取主成分得分
+    当scores=TRUE时，主成分得分存储在principal()函数返回对象的scores元素中
+探索性因子分析 
+    1 判断需提取公因子的个数：
+    Kaiser-Harris准则建议保留特征值大于0的因子。
+    Cattell碎石检验则绘制了特征值与因子数的图形，在图形变化最大处之上的主成分都可保留。
+    fa.parallel(r,n.obs=n,fa="both",n.iter=100,show.legend=TRUE,main="")
+    2 提取公因子  fa(r,nfactors=,n.obs=n,rotate="",scores=FALSE（默认）,fm="minres"（默认）)    fm是设定因子化方法
+    3 因子旋转  rotate="varimax"(方差极大旋转)/"promax"（斜交旋转）
+    对于正交旋转，因子分析的重点在于因子结构矩阵（变量与因子的相关系数）；
+    对于斜交旋转，因子分析会考虑三个矩阵：因子结构矩阵、因子模式矩阵和因子关联矩阵。
+    因子模式矩阵即标准化的回归系数矩阵。它列出了因子预测变量的权重。因子关联矩阵即因子相关系数矩阵。
+    因子结构矩阵（或称因子载荷阵）没有被列出来，但你可以使用公式F=P＊Phi很轻松地得到它，其中F是因子载荷阵，P为因子模式矩阵，Phi为因子关联矩阵。
+    使用factor.plot()或fa.diagram()函数，你可以绘制正交或者斜交结果的图形
+    factor.plot(fa.promax,labels=rownames(fa.promax$loadings))      fa.diagram(fa.promax,simple=FALSE)
+    4 因子得分  
+    当scores=TRUE时，因子得分存储在fa()函数返回对象的scores元素中
+
+
+第15章聚类分析
+聚类分析是一种数据归约技术，它可以把大量的观测值归约为若干个类。这里的类被定义为若干个观测值组成的群组，群组内观测值的相似度比群间相似度高
+最常用的两种聚类方法是层次聚类（常用算法有：单联动/全联动/平均联动/质心/Ward）和划分聚类（K-mean，围绕中心点的划分（PAM））。
+聚类分析的过程:
+    (1) 选择合适的变量
+    (2) 缩放数据   最常用的方法是将每个变量标准化为均值为0和标准差为1的变量   使用scale()函数来将变量标准化到均值为0和标准差为1的变量
+    (3) 寻找异常点。许多聚类方法对于异常值是十分敏感的，它能扭曲我们得到的聚类方案。通过outliers包中的函数来筛选（和删除）异常单变量离群
+    (4) 计算距离。尽管不同的聚类算法差异很大，但是它们通常需要计算被聚类的实体之间的距离.计算距离时默认使用欧几里得距离。
+    (5) 选择聚类算法      (6) 获得一种或多种聚类方法   (7) 确定类的数目
+    (8) 获得最终的聚类解决方案   (9) 结果可视化   (10) 解读类      (11) 验证结果
+层次聚类分析：
+    算法：(1) 定义每个观测值（行或单元）为一类；(2) 计算每类和其他各类的距离；
+          (3) 把距离最短的两类合并成一类，这样类的个数就减少一个；
+          (4) 重复步骤(2)和步骤(3)，直到包含所有观测值的类合并成单个的类为止。
+    聚类方法：单联动/全联动/平均联动/质心/Ward
+        单联动聚类方法倾向于发现细长的、雪茄型的类。它也通常展示一种链式的现象
+        全联动聚类倾向于发现大致相等的直径紧凑类。它对异常值很敏感
+        平均联动提供了以上两种方法的折中
+        Ward法倾向于把有少量观测值的类聚合到一起，并且倾向于产生与观测值个数大致相等的类。它对异常值也是敏感的。
+        质心法中类距离的定义比较简单、易于理解。相比其他方法，它对异常值不是很敏感，但不如平均联动法或Ward方法表现得好
+    函数格式:hclust(d, method=)，其中d是通过dist()函数产生的距离矩阵，并且方法包括"single"、"complete"、"average"、"centroid"和"ward"。
+    例：dfname.scaled<-scale(dfname)
+        d<-dist(dfname.scaled)
+        fit<-hclust(d,method="average")
+        plot(fit,hang=-1,cex=0.8,main="")     hang命令展示观测值的标签
+确定聚类个数：
+    NbClust包提供了众多的指数来确定在一个聚类分析里类的最佳数目
+    NbClust(fit,distance="euclidean",min.nc=2,max.nc=15,method="average")
+    wssplot（dfname）
+划分聚类分析
+    K均值聚类（最常见）：
+        (1) 选择K个中心点（随机选择K行）；(2) 把每个数据点分配到离它最近的中心点；
+        (3) 重新计算每类中的点到该类中心点距离的平均值（也就说，得到长度为p的均值向量，这里的p是变量的个数）；
+        (4) 分配每个数据到它最近的中心点；(5) 重复步骤(3)和步骤(4)直到所有的观测值不再被分配或是达到最大的迭代次数（R把10次作为默认迭代次数）。
+    函数格式：kmeans(x, centers)，这里x表示数值数据集（矩阵或数据框）, centers是要提取的聚类数目
+    围绕中心点的划分：
+        (1) 随机选择K个观测值（每个都称为中心点）；(2) 计算观测值到各个中心的距离/相异性；(3) 把每个观测值分配到最近的中心点；
+        (4) 计算每个中心点到每个观测值的距离的总和（总成本）；(5) 选择一个该类中不是中心的点，并和中心点互换；(6) 重新把每个点分配到距它最近的中心点；
+        (7) 再次计算总成本；(8) 如果总成本比步骤(4)计算的总成本少，把新的点作为中心点；(9) 重复步骤(5)~(8)直到中心点不再改变。
+    函数格式：cluster包   pam(x, k,metric="euclidean", stand=FALSE)
+            x表示数据矩阵或数据框，k表示聚类的个数，metric表示使用的相似性/相异性的度量，stand表示是否有变量应该在计算该指标之前被标准化
+            clusplot(fit,main="")   画出聚类的方案
+
+
+第16章时间序列
+方法：1 基于加权平均的指数模型，2 基于附近数据点和预测误差间关联的自回归积分移动平均（ARIMA）模型
+将时间序列分解成水平、趋势、季节性和随机（误差）等四个不同部分
+函数：stats包： ts()  start()/end()    frequency()  window() stl()    monthplot()  HoltWinters()   lag()  arima()    Box.test() 
+forecast包  ma()   seasonplot()    forecast()   accuracy()       ets()   Acf()    Pacf()   ndiffs()  auto.arima()
+时间序列对象:R中一种包括观测值、起始时间、终止时间以及周期（如月、季度或年）的结构。只有将数据转成时间序列对象后，我们才能用各种时序方法对其进行分析、建模和绘图。
+转化成时间序列对象     myseries<-ts(data,start=,end=,frequency=)
+对时序数据建立复杂模型之前也需要对其进行描述和可视化。
+时序的平滑化：
+    处理时序数据的第一步是画图
+    时序数据集中通常有很显著的随机或误差成分。为了辨明数据中的规律，我们总是希望能够撇开这些波动，画出一条平滑曲线。
+    画出平滑曲线的最简单办法是简单移动平均    plot（ma（dfname，n））   随着n的增大，图像变得越来越平滑
+    居中移动平均：每个数据点都可用这一点和其前后两个点的平均值来表示；缺点：每个时序集中我们会损失最后的(k-1)/2个观测值。
+时序的季节性分解：（常用方法是用LOESS光滑做季节性分解）
+    存在季节性因素的时间序列数据（如月度数据、季度数据等）可以被分解为趋势因子、季节性因子和随机因子。
+    趋势因子能捕捉到长期变化；季节性因子能捕捉到一年内的周期性变化；而随机（误差）因子则能捕捉到那些不能被趋势或季节效应解释的变化。
+    在相加模型中，各种因子之和应等于对应的时序值，即：Yt=Trendt+Seasonalt+Irregulart
+    在相乘模型中，趋势项、季节项和随机影响相乘，即：Yt=Trendt× Seasonalt× Irregulart   可转化为log(Yt)=log(Trendt×)+log(Seasonalt×)+log(Irregulart)
+    函数：stl(ts,s.window=,t.window=)      s.window控制季节效应变化的速度，t.window控制趋势项变化的速度
+        stl()函数返回的对象中有一项是time.series，它包括每个观测值中的趋势、季节以及随机效应的具体组成
+ 指数预测模型：用来预测时序未来值的最常用模型，短期预测能力较好
+    种类：单指数模型拟合的是只有常数水平项和时间点i处随机项的时间序列，认为时间序列不存在趋势项和季节效应
+        双指数模型（也叫Holt指数平滑）拟合的是有水平项和趋势项的时序
+        三指数模型（也叫Holt-Winters指数平滑）拟合的是有水平项、趋势项以及季节效应的时序。
+    函数：fit<-ets(ts,model="ZZZ")    ZZZ其中第一个字母代表误差项，第二个字母代表趋势项，第三个字母则代表季节项。
+                                        可选的字母包括：相加模型（A）、相乘模型（M）、无（N）、自动选择（Z）
+        单指数模型：参数有水平项   函数：ets(ts,model="ANN") 
+        双指数模型：参数有水平项、斜率   函数：ets(ts,model="AAN") 
+        三指数模型：参数有水平项、斜率、季节项   函数：ets(ts,model="AAA") 
+    单指数平滑根据现有的时序值的加权平均对未来值做短期预测，其中权数选择的宗旨是使得距离现在越远的观测值对平均数的影响越小
+            α越接近于1，则近期观测值的权重越大；α越接近于0，则历史观测值的权重越大；α的实际值一般由计算机选择
+        Yt=level+irregulart
+        forecast()函数用于预测时序未来的k步，其形式为forecast(fit, n)
+        accuracy()函数，展示了时序预测中最主流的几个准确性度量
+        预测准确性度量：
+            平均误差和平均百分比误差用处不大，因为正向和负向的误差会抵消掉
+            平均绝对百分误差给出了误差在真实值中的占比，它没有单位，因此可以用于比较不同时序间的预测准确性
+            平均绝对标准化误差通常用于比较不同尺度的时序间的预测准确性
+            平均残差平方和的平方根相对最有名、最常用。
+    Holt指数平滑可以对有水平项和趋势项（斜率）的时序进行拟合
+        Yt=level+slope × t+irregulart
+        平滑参数α（alpha）控制水平项的指数型下降，beta控制斜率的指数型下降。
+        同样，两个参数的有效范围都是[0,1]，参数取值越大意味着越近的观测值的权重越大
+    Holt-Winters指数光滑可用来拟合有水平项、趋势项以及季节项的时间序列
+        Yt=level+slope × t+st+irregulart
+        其中st代表时刻t的季节效应。除alpha和beta参数外，gamma光滑参数控制季节项的指数下降。
+        gamma参数的取值范围同样是[0,1], gamma值越大，意味着越近的观测值的季节效应权重越大。
+ets()函数还可以用来拟合有可乘项的指数模型，加入抑制因子（dampening component），以及进行自动预测
+ets()函数也可以用来拟合抑制项；也可以自动选取对原始数据拟合优度最高的模型（fit<-ets（ts））
+ARIMA预测模型
+ARIMA模型主要用于拟合具有平稳性（或可以被转换为平稳序列）的时间序列。在一个平稳的时序中，序列的统计性质并不会随着时间的推移而改变，
+比如Yt的均值和方差都是恒定的。另外，对任意滞后阶数k，序列的自相关性不改变
+非平稳的时序可以通过差分来转换为平稳性序列  diff(ts,differences=d)，其中d即对序列ts的差分次数，默认值为d=1。forecast包中的ndiffs()函数可以帮助我们找到最优的d值，语句为ndiffs(ts)。
+    一次差分可以移除序列中的线性趋势，二次差分移除二次项趋势，三次差分移除三次项趋势。
+    在实际操作中，对序列进行两次以上的差分通常都是不必要的
+    在ARIMA预测模型中，预测值表示为由最近的真实值和最近的预测误差组成的线性函数
+    时序的滞后阶数：我们向后追溯的观测值的数量
+        0阶滞后项（Lag 0）代表没有移位的时序，一阶滞后（Lag 1）代表时序向左移动一位，二阶滞后（Lag 2）代表时序向左移动两位，
+        以此类推。时序可以通过lag(ts, k)函数变成k阶滞后，其中ts指代目标序列，k为滞后项阶数。
+    自相关度量时序中各个观测值之间的相关性。
+        ACk即一系列观测值（Yt）和k时期之前的观测值（Yt-k）之间的相关性。这样，AC1就是一阶滞后序列和0阶滞后序列间的相关性，AC2是二阶滞后序列和0阶滞后序列之间的相关性；
+        以此类推。这些相关性（AC1, AC2, …, ACk）构成的图即自相关函数图；ACF图可用于为ARIMA模型选择合适的参数，并评估最终模型的拟合效果。    Acf（ts）
+    偏自相关即当序列Yt和Yt-k之间的所有值（Yt-1,Yt-2,…, Yt-k+1）带来的效应都被移除后，两个序列间的相关性；
+      Pacf(ts) PACF图也可以用来找到ARIMA模型中最适宜的参数
+    平稳性是ARIMA模型中的一个重要假设，我们可通过数据变换和差分使得序列满足平稳性假定
+        平稳性一般可以通过时序图直观判断；
+        如果方差不是常数，则需要对数据做变换；如果数据中存在趋势项，则需要对其进行差分。
+        也可以通过ADF统计检验来验证平稳性假定。tseries包的adf.test(ts)可以用来做ADF检验，如果结果显著，则认为序列满足平稳性
+    有自回归（AR）项、移动平均（MA）项或者两者都有（ARMA）的模型；检验有ARMA项的ARIMA模型，并对其进行差分以保证平稳性（Integration）
+ARMA和ARIMA模型
+    在一个p阶自回归模型中，序列中的每一个值都可以用它之前p个值的线性组合来表示：
+        AR(p):Yt=μ+β1Yt-1+β2Yt-2+…+βpYt-p+εt   其中Yt是时序中的任一观测值，μ是序列的均值，β是权重，εt是随机扰动
+    在一个q阶移动平均模型中，时序中的每个值都可以用之前的q个残差的线性组合来表示，
+        MA(q): Yt=μ- θ1εt 1-- θ2εt2-...- θqεt-q+εt     其中ε是预测的残差，θ是权重
+    这两种方法的混合即ARMA(p, q)模型，其表达式为：Yt=μ+β1Yt-1+β2Yt-2+…+βpYt-p-θ1εt-1-θ2εt-2…-θqεt-q+εt
+        此时，序列中的每个观测值用过去的p个观测值和q个残差的线性组合来表示
+    ARIMA(p, d, q)模型意味着时序被差分了d次，且序列中的每个观测值都是用过去的p个观测值和q个残差的线性组合表示的
+    建立ARIMA模型的步骤包括：(1) 确保时序是平稳的；(2) 找到一个（或几个）合理的模型（即选定可能的p值和q值）；
+    (3) 拟合模型；(4) 从统计假设和预测准确性等角度评估模型；(5) 预测
+        (1) 确保时序是平稳的   通过时序图直观判断；如果方差不是常数，则需要对数据做变换；也可以通过ADF统计检验来验证平稳性假定
+        (2) 选择模型      可通过ACF图和PACF图来选择备选模型    我们需要为ARIMA模型指定参数p、d和q。从前文可以得到d=1
+            模型      ARIMA(p,d,0)      ARIMA(0,d,q)       ARIMA(p,d,q)
+            ACF        逐渐减小到0       q阶后减小到0        逐渐减小到0
+        (3) 拟合模型     arima(ts, order=c(q, d, q))
+        (4) 模型评价   一个模型如果合适，那模型的残差应该满足均值为0的正态分布，并且对于任意的滞后阶数，残差自相关系数都应该为零
+            如果模型残差不满足正态性假设或零自相关系数假设，则需要调整模型、增加参数或改变差分次数
+            qq图   qqnorm（）与qqline（）   检验数据是否满足正态分布
+            Box.test()函数可以检验残差的自相关系数是否都为零
+        (5) 预测     forecast(ts，n) 预测数据    plot(forecast(ts，n))   预测图
+        ARIMA的自动预测  auto.arima(ts)可以实现最优ARIMA模型的自动选取
+
+
+第17章分类
+有监督机器学习领域中包含许多可用于分类的方法，如逻辑回归、决策树、随机森林、支持向量机、神经网络等
+有监督学习基于一组包含预测变量值和输出变量值的样本单元。将全部数据分为一个训练集和一个验证集，其中训练集用于建立预测模型，验证集用于测试模型的准确性
+rpart、rpart.plot和party包来实现决策树模型及其可视化，
+通过randomForest包拟合随机森林，
+通过e1071包构造支持向量机，
+通过R中的基本函数glm()实现逻辑回归
+逻辑回归：
+    fit.logit<-glm(A~x1+x2+B+C...,data=,family=binomial())        summary(fit.logit)
+决策树：其基本思想是对预测变量进行二元分离，从而构造一棵可用于预测新样本单元所属类别的树。有经典树和条件推断树
+rpart包支持rpart()函数构造决策树，prune()函数对决策树进行剪枝
+经典树:
+    set.seed(1234)
+    dtree<-rpart(A~x1+x2+B+C...,data=,method="class",parms=list())
+    ploycp(dtree)     画出交叉验证误差与复杂度参数的关系图
+    dtree.pruned<-prune(dtree,cp=n,)    prune()函数根据复杂度参数剪掉最不重要的枝，从而将树的大小控制在理想范围内;复杂度参数（cp）用于惩罚过大的树
+    prp(dtree.pruned,type=2,extra=104,fallen.leaves=TRUE,main="")   画出最终的决策树
+        type=2可画出每个节点下分割的标签，extra=104可画出每一类的概率以及每个节点处的样本占比，fallen.leaves=TRUE可在图的底端显示终端节点
+    dtree.pred<-predict(dtree.pruned,df.validate,type="class")      用来对验证集中的观测点分类;用来对验证集中的观测点分类
+    dtree.pref<-table(df.validate$class,dtree.pred,dnn=c("Actual","Predicted"))   对训练集外样本点分类
+条件推断树:条件推断树与传统决策树类似，但变量和分割的选取是基于显著性检验的，而不是纯净度或同质性一类的度量
+    条件推断树可由party包中的ctree()函数获得
+    fit.ctree<-ctree(A~x1+x2+B+C...,data=)     plot(fit.ctree)     predict(fit.ctree)
+    对于条件推断树来说，剪枝不是必需的，其生成过程相对更自动化一些
+随机森林:随机森林的算法涉及对样本单元和变量进行抽样，从而生成大量决策树
+randomForest包中的randomForest()函数可用于生成随机森林。函数默认生成500棵树，并且默认在每个节点处抽取sqrt(M)个变量，最小节点为1。
+    set.seed(1234)
+    fit.forest<-randomforest(A~x1+x2+B+C...,data=,na.action=na.roughfix,importance=TRUE)
+        na.action=na.roughfix参数可将数值变量中的缺失值替换成对应列的中位数，类别变量中的缺失值替换成对应列的众数类
+    importance(fit.forest,type=2)
+        随机森林可度量变量重要性，通过设置information=TRUE参数得到，并通过importance()函数输出
+        type=2参数得到的变量相对重要性就是分割该变量时节点不纯度（异质性）的下降总量对所有树取平均
+    forest.pred<-predict(fit.forest,df.validate)
+    forest.pref<-table(df.validate$class,forest.pred,dnn=c("Actual","Predicted"))
+注意：randomForest包根据传统决策树生成随机森林，而party包中的cforest()函数则可基于条件推断树生成随机森林。当预测变量间高度相关时，基于条件推断树的随机森林可能效果更好
+优点：相较于其他分类方法，随机森林的分类准确率通常更高。另外，随机森林算法可处理大规模问题（即多样本单元、多变量），可处理训练集中有大量缺失值的数据，也可应对变量远多于样本单元的数据。
+        可计算袋外预测误差（OOB error）、度量变量重要性也是随机森林的两个明显优势。
+缺点：随机森林的一个明显缺点是分类方法（此例中相当于500棵决策树）较难理解和表达。另外，我们需要存储整个随机森林以对新样本单元分类
+支持向量机（SVM）
+一类可用于分类和回归的有监督机器学习模型。其流行归功于两个方面：一方面，他们可输出较准确的预测结果；另一方面，模型基于较优雅的数学理论。
+SVM旨在在多维空间中找到一个能将全部样本单元分成两类的最优平面，这一平面应使两类中距离最近的点的间距（margin）尽可能大，在间距边界上的点被称为支持向量（support vector，它们决定间距），分割的超平面位于间距的中间。
+kernlab包的ksvm()函数和e1071包中的svm()函数实现。ksvm()功能更强大,但svm()相对更简单
+    set.seed(1234)
+    fit.svm<-svm(A~x1+x2+B+C...,data=)
+    svm.pred<-predict(fit.svm,na.omit(df.validate))
+    svm.pref<-table(na.omit(df.validate)$class,forest.pred,dnn=c("Actual","Predicted"))
+    svm()函数默认通过径向基函数（Radial BasisFunction, RBF）将样本单元投射到高维空间
+    两个参数可能影响最终结果：gamma和成本（cost）。
+    gamma是核函数的参数，控制分割超平面的形状。gamma越大，通常导致支持向量越多;gamma必须大于0。
+    成本参数代表犯错的成本。一个较大的成本意味着模型对误差的惩罚更大，从而将生成一个更复杂的分类边界，对应的训练集中的误差也会更小，但也意味着可能存在过拟合问题，即对新样本单元的预测误差可能很大。较小的成本意味着分类边界更平滑，但可能会导致欠拟合;必须大于0
+    可以通过tune.svm()对每个参数设置一个候选范围，tune.svm()函数对每一个参数组合生成一个SVM模型，并输出在每一个参数组合上的表现
+    缺点:是分类准则比较难以理解和表述
+选择预测效果最好的解
+最常用的一个统计量是准确率（accuracy），即分类器是否总能正确划分样本单元
+一个分类器的敏感度（sensitivity）、特异性（sensitivity）、正例命中率（positive predictive power）和负例命中率（negative predictive power）
+
+
+第18章使用ggplot2进行高级绘图
+ggplot2包实现了一个在R中基于全面一致的语法创建图形时的系统；
+在ggplot2中，图是采用串联起来（+）号函数创建的。每个函数修改属于自己的部分
+例：ggplot(data=mtcars,aes(x=wt,y=mpg))+gemo_point(pch=12,color="blue",size=2)+gemo_smooth(method="lm",color="red",linetype=2)+labs(title="",x="",y="")
+    aes()函数的功能是指定每个变量扮演的角色
+    geom_point()函数在图形中画点，创建了一个散点图。
+    geom_smooth()函数增加了一条“平滑”曲线。这里需要线性拟合（method="lm"）默认情况下，平滑的曲线包括在95%的置信区间（较暗带）内
+    labs()函数是可选的，可添加注释（包括轴标签和标题）
+几何函数：  
+    gemo_bar/boxplot/density/histogram/hline/jitter/line/point/rug/smooth/texviot/violin/vline()
+        条形/箱线/密度/直方/水平线/抖动点/线/散点/地毯/拟合曲线/文字注释/小提琴/垂线 图
+几何函数常见选项：
+    color   fill  alpha  linetype  size  shape  position  binwidth  notch  sides  width
+    颜色    填充区域着色  透明度  线类型  点/线尺寸  点形状 位置 直方图宽 方块图是否有缺口 地毯图位置 箱线图宽
+分组  ggplot(data=,aes(x=x1,fill/color/shape=A))    x1是连续性变量  fill/color/shape是函数选项  A是分类变量
+      通常来说，变量应该设在aes()函数内，分配常数应该在aes()函数外
+刻面函数：
+    facet_wrap(~var,ncol=n)     将每个var水平排列成n列的独立图
+    facet_wrap(~var,nrow=n)     将每个var水平排列成n行的独立图
+    facet_grid(rowvar~colvar)   rowvar和colvar组合的独立图
+    facet_grid(rowvar~.)        每个rowvar水平的独立图，配置成一个单列
+    facet_grid(.~colvar)        每个colvar水平的独立图，配置成一个单行
+添加光滑曲线：geom_smooth()
+    选项：  method=    使用的平滑函数，值有lm/glm/smooth/rlm/gam
+            formula=   在光滑函数中使用的公式
+            se         绘制置信区间（TRUE，默认）
+            level=      使用的置信区间水平（默认95%）
+            fullrange   指定拟合应涵盖全图（TRUE）或仅仅是数据（FALSE，默认）
+改变ggplot2图形的外观：
+    坐标轴：函数有：scale_x/y_continuous() breaks=刻度标记   labels=刻度标记标签   limits=控制要展示的值的范围
+                   scale_x/y_discrete()  breaks=刻度标记   labels=刻度标记标签   limits=控制要展示的值的范围
+                    coord_flip()   颠倒x轴与y轴
+    图例：ggplot2包能自动生成图例，而且在很多时候能够满足我们的需求；但是在其他时候，我们可能要对其进行自定义
+        标题的位置由theme()函数中的legend.position选项控制。可能的值包括"left"、"top"、"right"（默认值）和"bottom"
+    标尺：把数据空间的观察值映射到可视化的空间中
+            scale_color_manual(value=c（"","",""）)函数来设定三个不同等级的点的颜色
+            scale_color_brewer()和scale_fill_brewer()函数来预先指定分得清的颜色集
+    主题：theme()函数中的选项可以让我们调整字体、背景、颜色和网格线等
+    截面图基于一个或多个分类变量创建一系列的图。
+    多重图将多个独立的图绘制到单个图形中。
+保存图形：ggsave()函数能更方便地保存它。它的选项包括保存哪幅图形，保存在哪里和以什么形式保存
+        ggsave(file=".png",plot=plot_name,width=,height=)
+
+
+
+其他：
+编写有效的代码：
+    ❏ 程序只读取需要的数据。
+    ❏ 尽可能使用矢量化替代循环。
+    ❏ 创建大小正确的对象，而不是反复调整。
+    ❏ 使用并行来处理重复、独立的任务。
+调试是寻找和减少一个程序中错误或缺陷数目的过程。
+R中函数失效的常见原因：
+    ❏ 对象名称拼写错误，或是对象不存在。
+    ❏ 函数调用参数时设定错误。
+    ❏ 对象的内容不是用户期望的结果。尤其是当把NULL或者含有NaN或NA值的对象传递给不能处理它们的函数时，错误经常发生。
+调试函数：
+    debug()函数标记一个函数进行调试。
+    当执行函数时，browser()函数被调用并允许你单步每次调试一行函数。
+    你可以使用trace()函数临时在函数中插入调试代码
+    undebug()函数会关闭调试功能，让函数正常执行。
+    traceback()函数将会列出导致错误的调用函数序列。最后一个调用就是产生错误的原因
+创建动态报告：
+    这些动态报告可以用以下格式保存：
+        ❏ 网页❏ Microsoft Word文档❏ Open Document格式文档❏ 出版水平的PDF或者PostScript文档
+    用模板生成报告：
+        模版文件（example.Rmd）是一个纯文本文档，包含以下三个部分。
+        ❏ 报告文字：所有解释性的语句和文字
+        ❏ 格式化语法（formatting syntax）：控制报告格式化方式的标签
+        ❏ R代码：要运行的R语句
+    这个模版文件被作为参数传递到rmarkdown包的render()函数中，然后创建出一个网页文件example.html
+    动态报告，动态之处在于改变数据和重新处理模版文件的话会生成一份新的报告。
+    R中的Markdown模版能够用来生成HTML、PDF和Microsoft Word文档。
+    ODT和DOCX模版分别用于生成Open Document和Microsoft Word文档。
+    LaTeX模版则能生成出版水平的PDF文档，包括报告、文章和图书。

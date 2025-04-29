@@ -1,0 +1,445 @@
+SPSS数据利用R软件进行分析
+
+两组间均数比较
+#正态性检验
+    n<50   夏皮洛-威尔克
+    tapply(data$身高,data$性别,shapiro.test)        stats package
+    n>50  柯尔莫戈洛夫-斯米诺夫(V)
+    tapply(data$身高,data$性别,lillie.test/ks.test)      nortest包
+    qq图
+    tapply(data$身高,data$性别,qqPlot)    car包
+    qqPlot(data$身高,groups=data$性别)
+#方差齐性检验
+    假定数据符合正态分布
+    bartlett.test(data$胸围~data$性别)
+    假定不符合
+    leveneTest(data$胸围~data$性别)     car包
+#离群值检验
+    outlinerTest(fit)     car包
+#T检验(当样本，独立样本，配对样本)
+    t.test(data$胸围~data$性别,alternative='two.side',paired=FALSE)    	
+#两组/多组非参数检验      
+      wilcox.test(y~x,data=)     Mann-White U检验   两组独立样本    --符号秩检验
+      kruskal.test(y~x,data=)    Kruskal-Wallis检验   多组独立样本
+      friedman.test(y~A|B,data=)   Friedman       多组相关样本
+符号检验：binom.test(sum(error$B1<error$Q1), length(error$B1))
+
+#方差分析（两组以上的均值比较）
+fit<-aov(y~x+/*A,data=data)
+summary(fit)
+table（A）      #查看各样本量大小
+aggregate（y，by=list(A),FUN=mean）    #查看各组均值
+aggregate（y，by=list(A),FUN=sd）      #查看各组标准差
+TukeyHSD（fit）       #进行多重比较 
+plotmeans(y~A,xlab="",ylab="",main="")   #绘制各组均值及其置信区间图       gplots包
+
+#协方差分析：
+fit<-aov(y~A+x,data=data)
+summary(fit)
+attention:1 结果中获取调整的组均值，即去除协变量效应后的组均值：  effects包 effects("A",fit)
+            评估检验的假设条件：正态性，方差齐性，回归斜率相同（即无交互作用）
+            可视化    HH包 ancova(y~x+A,data=)   绘制因变量、协变量与因子间的关系图
+
+#多变量方差分析
+fit<-aov(y~A*B,data=data)      或fit<-aov(y~A+B+A:B,data=data)
+summary(fit)
+interaction.plot(A1,A2,y,type="b",col=c("red","blue"),pch=c(),main="")    #变量间交互效应图
+
+#多组间的比较
+#LSD检验（最小显著差数检验法）：这也是我最常用的方法，基本上就是T检验的简单变形，T检验是对两组，而这个可以对多组间的均数做检验；
+    agricolae包，LSD.test(y, trt, DFerror, MSerror, alpha = 0.05, p.adj=c("none","holm","hommel", "hochberg", "bonferroni", "BH", "BY", "fdr"), …)
+
+#Dunnett检验：适用于多个试验组与一个对照组的比较，多对一；
+    multcomp包      glht(model, linfct, alternative = c("two.sided", "less", "greater"), ...)
+#Turkey检验：适用于组数大于6以上（不确定）；     TukeyHSD(model)        plot(TukeyHSD(model))
+
+#SNK法（Student-Newman-Keuls）：最为流行的方法，广泛使用，但只告诉有无差异,不提供精确P值。
+agricolae包       SNK.test(y, trt, alpha = 0.05, …)     plot()
+#Duncan法：没用过，不过结果应该和LSD差不多；
+agricolae包         duncan.test(y, trt, …)        plot()
+#Scheffe检验：适用于任何比较。
+agricolae包         duncan.test(y, trt, …)   plot()
+#Bonferroni法：当比较次数不多时（小于5组），Bonferroni法的效果较好。
+
+aov(formula,data=dfname)      小写字母表示定量变量，大写字母表示组别因子
+    formula格式：  y~A   单因素ANOVA
+        y~x+A   含协变量单因素分析           y~A*B   双因素ANOVA分析        y~B+A  随机化区组方差分析（B是区组因子）
+
+#重复测量方差分析
+1.1 重复测量一个因素的三因素混合设计
+ summary(aov(score ~ A * B * C + Error(subject/B), data =))
+1.2 重复测量二个因素的三因素混合设计
+ summary(aov(score ~ A * B * C + Error(subject/(B+C)), data = Dataset2))
+1.3 重复测量三个因素的三因素设计
+ summary(aov(score ~ A * B * C + Error(subject/(A*B*C)), data = Dataset3))
+
+#重复测量方差分析——ezANOVA的使用：
+#变量因子化
+data$Subject <- as.factor(data$Subject)
+data$Familiarity <- as.factor(data$Familiarity)
+data$Density <- as.factor(data$Density)
+#大致了解变量及其类型
+head(data)
+View(data)
+str(data)
+summary(data)
+library(ez)
+ezANOVA( data, dv, wid, within = NULL, within_full = NULL, within_covariates = NULL, between = NULL, 
+        between_covariates = NULL, observed = NULL, diff = NULL, reverse_diff = FALSE, type = 2, 
+            white.adjust = FALSE, detailed = FALSE, return_aov = FALSE )         
+    #data, 需要分析的数据集，如前文所述格式要求为long-data  dv, 研究中的因变量（dependent variable）
+    wid, 数据集中的被试编号（case）  within, 数据集中的被试内自变量，如果只有一个时可以直接声明，有多变量的情况
+    下其格式为 within = .(FactorA, FactorB) *注意括号前面有个英文的句号   type, 默认的计算类型的II型，只考虑自变量的主效应，不考虑交互作用。如果数  据是平衡的，且不存在交互作用，则Type I，II和III得出的结果是相同的。
+for example
+model <- ezANOVA(data, dv = Score, wid = Subject, within = .(Familiarity, Density), type = 3, detailed = T)
+model
+输出结果包含三个表，第一个表ANOVA即方差分析的结果，其中ges（Generalized Eta-Squared）表示的[公式]，是SPSS中所没有输出的。
+后面两个表依次为球形检验的结果及其校正，由于生字密度和交互作用的水平数都大于2，需要进行球形检验。当球形检验的p 值大于0.05时，自变量各水平之间都符合球形假设，即相互独立。
+反之则表明不符合球形假设，需要参考第三个表Sphericity Corrections中的GGe（Greenhouse-Geisser epsilon）或者HFe（Huynh-Feldt epsilon）对df 进行校正。
+关于采取哪种校正方案， Girden (1992)认为当epsilon > 0.75时，建议用Huynh-Feldt校正，当epsilon < 0.75时，建议用Greenhouse-Geisser校正。
+
+#Mauchly's Test表的结果显示，只有交互作用不满足球形假设，为此需要根据Sphericity Corrections 中的GGe对交互作用的df 进行校正：
+> Int_DFn <- 2 * model$`Sphericity Corrections`[2,2]
+> Int_DFd <- 18 * model$`Sphericity Corrections`[2,2]
+> table(int_DFn,int_DFd)
+ezANOVA默认输出的是 n2 ，但有些期刊要求报告 np2,计算np2：
+model$ANOVA[4] / (model$ANOVA[4] + model$ANOVA[5])
+
+
+多元方差分析：
+    library(MASS)
+    attach(UScereal)
+    y <- cbind(calories, fat, sugars)
+    aggregate(y, by = list(shelf), FUN = mean)
+    fit <- manova(y ~ shelf+A+B...,data=)
+    summary.aov(fit)
+评估假设检验
+    1.多元正态性
+        center <- colMeans(y)
+        n <- nrow(y)
+        p <- ncol(y)
+        cov <- cov(y)
+        d <- mahalanobis(y, center, cov)
+        coord <- qqplot(qchisq(ppoints(n), df = p), d, main = "QQ Plot Assessing Multivariate Normality", 
+        ylab = "Mahalanobis D2", abline(a = 0, b = 1),identify(coord$x, coord$y, labels = row.names(UScereal))
+    2.方差—协方差矩阵同质性即指各组的协方差矩阵相同，通常可用Box’s M检验来评估该假设
+    3.检测多元离群点
+        library(mvoutlier)
+        outliers <- aq.plot(y)
+        outliers
+
+
+卡方检验
+创建与处理列联表函数
+    mytable<-table(var1,var2...,data=)              xtabs(formula,data)
+    prop.table(table,margins)  生成边际比例        margins为n：表示table中的第n个变量    margin.table(table,margins)  生成边际频数
+    addmargins(table,margins)  求和结果添加到表中       ftable(table)  创建一个紧凑的平铺列联表
+卡方检验：
+    chisq.test(mydtable)
+fisher检验：
+    fisher.test(mydtable)
+配对卡方检验（Cochran-Mantel-Haenszel检验）：
+    mantelhaen.test(mydtable)
+
+相关性检验：
+    分类变量的相关性（vcd包）：
+        assocstats(mydtable)           计算二维列表这的phi系数，列联系数，CramersV系数
+        kappa(mytable)                 对两评价者对于一系列对象分类所得结果的一致性程度
+    连续变量的相关性：
+            cor()函数可以计算这三种相关系数（Pearson/Spearman/Kendall相关系数），而cov()函数可用来计算协方差
+            cor(x,use="everthing"（默认）,method="pearson"（默认）)   
+            相关性检验： cor.test(x,y,alternative="two.side"（默认）,method="pearson"（默认）)      alternative="less"/"greater"    method="spearman"/"kendall"
+    注：psych包    cor.test(dfname,use="complete"/"pairwise",method="pearson"（默认）)每次只能检验一种相关关系。但psych包中提供的corr.test()函数可以一次做更多事情 
+
+
+回归
+包括简单线性/多元线性/非线性/非参数/多项式/多变量/Logistic/泊松/Cox比例风险/时间序列/稳健
+    myfit<-lm(formula,data=)      formula格式：Y~X1+X2+....
+        符号  x：z 交互性      x*z 所有可能的交互项    . 包含除因变量外的所有变量      - 移除某变量    -1 删除截距项
+    拟合线性模型后常用的函数：
+        summary/coef/confint/fitted/residual/predict/anova/AIC/plot(myfit)
+        拟合结果详细信息/模型参数/参数置信区间/预测值/残差/预测/模型的方差分析图/AIC值/诊断图
+    回归诊断：par(mfrow=c(2,2))     plot（myfit）   共生成4张图
+        Residuals vs Fitted    线性关系
+        Normal Q-Q              正态性检验（所有点应在45度线上）
+        Scale-Location          方差齐性检验（水平线周围点应随机分布）
+        Residuals vs Leverage       鉴别离群点、高杠杆值点、强影响点
+    回归诊断的改进方法：
+    car包   qqplot()     QQ图，正态性检验
+            durbinWatsonTest()   Durbin-Watson检验    独立性
+            crPlots()                      成分与残差图  线性
+            ncvTest()       spreadLevelPlot()     方差齐性检验
+            influencePlot()    鉴别离群点、高杠杆值点、强影响点
+    多重共线性   car包     vif（myfit）          VIF>10   代表自变量间有共线性
+    模型比较：
+        anova函数比较：     anova（fit1，fit2...）
+        AIC(赤池信息准则)比较     AIC(fit1,fit2...)    AIC值较小的模型优先选择，说明模型用较少的参数获得了足够的拟合度
+    变量的选择：
+        1.（向前/向后/向前向后）逐步回归法：模型添加/删除一个变量，直到达到某个判停准则为止
+        MASS包   stepAIC(fit,direction="backward"/forward"/"both")
+        2.全子集回归：所有可能的模型都会被检验
+        leaps包   regsubsets(formula,data=,nbest=n)
+    交叉验证:将一定比例的数据挑选出来作为训练样本，另外的样本作保留样本，先在训练样本上获取回归方程，然后在保留样本上做预测
+    在k重交叉验证中，样本被分为k个子样本，轮流将k-1个子样本组合作为训练集，另外1个子样本作为保留集。这样会获得k个预测方程，记录k个保留样本的预测表现结果，然后求其平均值。
+    bootstrap包     crossval()
+
+广义线性模型（Logistic回归（因变量为类别型）和泊松回归（因变量为计数型））
+函数基本形式：glm(formula,family=family(link=function),data=)
+family(概率分布)与link_function（连接函数）
+    family：        binomial      gaussian            gamma        poisson      quasibinomial  quasipoisson
+    link_function  link="logit"  link="identity"   link="inverse"  link="log"   link="logit"    link="log"
+与glm（）连用的函数有：summary/coef/confint/residuals/predict/deviance/anova/plot(fit)
+Logistic回归：二项/多项/序数/稳健
+dfname<-as.data.frame(raw_data)       summary(dfname)    A<-factor(A)    table（A）
+myfit<-glm(A~x1+x2+B+C...,data=dfname,family=binomial())       summary(fit)           anova(fit1.fit2,test="Chisq")
+过度离势，即观测到的响应变量的方差大于期望的二项分布的方差。过度离势会导致奇异的标准误检验和不精确的显著性检验。
+    检测过度离势的一种方法是比较二项分布模型的残差偏差与残差自由度 接近1表示没有过度趋势；比1大很多，你便可认为存在过度离势     
+        deviance(fit.reduced)/df.residual(fit.reduced)
+    当出现过度离势时，仍可使用glm()函数拟合Logistic回归，但此时需要将二项分布改为类二项分布（quasibinomial distribution）
+泊松回归：   扩展：时间段变化/零膨胀/稳健的泊松分布
+    myfit<-glm(N~x1+x2+B+C...,data=dfname,family=poisson())
+    泊松分布的方差和均值相等。当响应变量观测的方差比依据泊松分布预测的方差大时，泊松回归可能发生过度离势
+    产生过度离势的原因有：遗漏某个重要的预测变量；可能因为事件相关；重复数据中由于内在群聚特性引起；
+    deviance(fit.reduced)/df.residual(fit.reduced)
+    使用类泊松（quasi-Poisson）方法所得的参数估计与泊松方法相同，但标准误变大了许多。
+
+生存分析（需要survival包）
+library(survival)
+library(ranger)
+library(ggplot2)
+library(dplyr)
+library(ggfortify)
+data(veteran)
+head(veteran)
+#1.Kaplan Meier 分析
+    # Kaplan Meier Survival Curve
+        km <- with(veteran, Surv(time, status))
+        head(km,80)
+        km_fit <- survfit(Surv(time, status) ~ 1, data=veteran)
+        summary(km_fit, times = c(1,30,60,90*(1:10)))
+        #plot(km_fit, xlab="Days", main = 'Kaplan Meyer Plot') #基本绘图方式
+        autoplot(km_fit)
+        #按治疗方式分组的生存曲线
+        km_trt_fit <- survfit(Surv(time, status) ~ trt, data=veteran)
+        autoplot(km_trt_fit)
+        #将年龄也分为两种，治疗变量设为因子类型。
+        vet <- mutate(veteran, AG = ifelse((age < 60), "LT60", "OV60"),
+              AG = factor(AG),
+              trt = factor(trt,labels=c("standard","test")),
+              prior = factor(prior,labels=c("N0","Yes")))
+               km_AG_fit <- survfit(Surv(time, status) ~ AG, data=vet)
+               autoplot(km_AG_fit)
+
+    #Cox 比例风险模型（Cox模型需要假设协变量不随时间变化）
+        # Fit Cox Mode  
+        cox <- coxph(Surv(time, status) ~ trt + celltype + karno + diagtime + age + prior , data = vet)
+        summary(cox)
+        cox_fit <- survfit(cox)
+        #plot(cox_fit, main = "cph model", xlab="Days")
+        autoplot(cox_fit)
+    #利用Aalen模型观察变量随时间的变化，
+    #注意下面karno变量陡峭的斜率以及之后斜率突然的变化。
+        aa_fit <-aareg(Surv(time, status) ~ trt + celltype +
+                 karno + diagtime + age + prior , 
+                 data = vet)
+        aa_fit
+        #summary(aa_fit)  # provides a more complete summary of results
+        autoplot(aa_fit)
+    随机森林模型：（ranger()函数为数据集中的每个观测构建模型，绘制n条随机曲线，和一条总体平均线）
+        # ranger model
+        r_fit <- ranger(Surv(time, status) ~ trt + celltype + karno + diagtime + age + prior,
+            data = vet,mtry = 4,importance = "permutation",splitrule = "extratrees",verbose = TRUE)
+
+        # Average the survival models
+        death_times <- r_fit$unique.death.times 
+        surv_prob <- data.frame(r_fit$survival)
+        avg_prob <- sapply(surv_prob,mean)
+
+        # Plot the survival models for each patient
+        plot(r_fit$unique.death.times,r_fit$survival[1,], type = "l", 
+        ylim = c(0,1),col = "red",xlab = "Days",ylab = "survival",main = "Patient Survival Curves")
+
+        #
+        cols <- colors()
+        for (n in sample(c(2:dim(vet)[1]), 20)){
+            lines(r_fit$unique.death.times, r_fit$survival[n,], type = "l", col = cols[n])
+        }
+        lines(death_times, avg_prob, lwd = 2)
+        legend(500, 0.7, legend = c('Average = black'))
+
+    #使用ranger() 为变量的重要性排序
+        vi <- data.frame(sort(round(r_fit$variable.importance, 4), decreasing = TRUE))
+        names(vi) <- "importance"
+        head(vi)
+    #ROC曲线值
+        cat("Prediction Error = 1 - Harrell's c-index = ", r_fit$prediction.error)
+    上述三种生存分析方法的曲线图比较
+        # Set up for ggplot
+        kmi <- rep("KM",length(km_fit$time))
+        km_df <- data.frame(km_fit$time,km_fit$surv,kmi)
+        names(km_df) <- c("Time","Surv","Model")
+
+        coxi <- rep("Cox",length(cox_fit$time))
+        cox_df <- data.frame(cox_fit$time,cox_fit$surv,coxi)
+        names(cox_df) <- c("Time","Surv","Model")
+
+        rfi <- rep("RF",length(r_fit$unique.death.times))
+        rf_df <- data.frame(r_fit$unique.death.times,avg_prob,rfi)
+        names(rf_df) <- c("Time","Surv","Model")
+
+        plot_df <- rbind(km_df,cox_df,rf_df)
+        p <- ggplot(plot_df, aes(x = Time, y = Surv, color = Model))
+        p + geom_line()
+
+
+主成分分析
+步骤:
+    数据预处理(保证数据中没有缺失值)
+    选择因子模型(判断是PCA还是EFA)
+    判断要选择的主成分/因子数目
+    选择主成分
+    旋转主成分
+    解释结果
+    计算主成分或因子的得分
+
+1.使用碎石图确定需要提取的主成分个数
+library(psych)
+fa.parallel(USJudgeRatings[,-1],fa='pc',n.iter = 100,
+show.legend = F,main = 'Scree plot with parallel analysis')
+2.提取主成分
+pc <- principal(USJudgeRatings[,-1],nfactors = 1)
+pc
+3.获取主成分得分
+pc <- principal(USJudgeRatings[,-1],nfactors = 1,scores = T)
+head(pc$scores)
+cor(USJudgeRatings$CONT,pc$scores)
+4.获取相关系数
+cor(USJudgeRatings$CONT,pc$scores)
+主成分旋转(尽可能对成分去噪)
+rc <- principal(Harman23.cor$cov,nfactors = 2,rotate = 'varimax')
+获取主成分的得分系数
+round(unclass(rc$weights),2)
+
+探索性因子分析（EFA）
+1.判断需要提取的因子数
+covariances <- ability.cov$cov
+correlations <- cov2cor(covariances)
+fa.parallel(correlations,n.obs = 112,fa='both',n.iter=100,
+main = 'Scree plots with parallel analysis')
+2.提取公共因子
+fa <- fa(correlations,nfactors = 2,rotate = 'none',fm='pa')
+fa
+3. 因子旋转(正交旋转)
+fa.varimax <- fa(correlations,nfactors=2,rotate='varimax',fm='pa')
+fa.varimax
+fa.diagram(fa.promax,simple = F)
+斜交旋转提取因子
+fa.promax <- fa(correlations,nfactors=2,rotate='Promax',fm='pa')
+fa.promax
+fa.diagram(fa.promax,simple = F)
+计算得分
+fsm <- function(oblique) {
+    if (class(oblique)[2]=="fa" & is.null(oblique$Phi)) {
+      warning("Object doesn't look like oblique EFA")
+   } else {
+      P <- unclass(oblique$loading)
+      F <- P %*% oblique$Phi
+      colnames(F) <- c("PA1", "PA2")
+      return(F)
+    }
+ }
+fsm(fa.promax)
+
+
+聚类分析
+1.K-均值聚类（K-Means）
+# kmeans对iris进行聚类分析 
+iris2<-iris[,1:4]
+iris.kmeans<-kmeans(iris2,3)
+iris.kmeans
+#用table函数查看分类结果情况
+table(iris$Species,iris.kmeans$cluster)
+lot(iris2$Sepal.Length,iris2$Sepal.Width,col=iris.kmeans$cluster,pch="*")
+points(iris.kmeans$centers,pch="X",cex=1.5,col=4)
+
+2.K-Mediods 进行聚类分析
+#k-mediods中包含pam、clara、pamk三种算法，我们通过iris数据集来看看三者表现
+install.packages("cluster")
+library(cluster)
+iris2.pam<-pam(iris2,3)
+table(iris$Species,iris2.pam$clustering)
+layout(matrix(c(1,2),1,2)) #每页显示两个图
+plot(iris2.pam)
+layout(matrix(1))
+
+iris2.clara<-clara(iris2,3)
+table(iris$Species,iris2.clara$clustering)
+layout(matrix(c(1,2),1,2)) #每页显示两个图
+plot(iris2.clara)
+layout(matrix(1))
+
+install.packages("fpc")
+library(fpc)
+iris2.pamk<-pamk(iris2)
+table(iris2.pamk$pamobject$clustering,iris$Species)
+layout(matrix(c(1,2),1,2)) #每页显示两个图
+plot(iris2.pamk$pamobject)
+layout(matrix(1))
+#通过上述分类结果可以看到，pam和calra算法分类结果基本类似，但是pamk将三类分为了两类。
+
+
+层次聚类HCluster
+#---层次聚类 
+dim(iris)#返回行列数
+idx<-sample(1:dim(iris)[1],40)
+iris3<-iris[idx,-5]
+iris3
+hc<-hclust(dist(iris3),method = "ave")  #注意hcluster里边传入的是dist返回值对象
+plot(hc,hang=-1,labels=iris$Species[idx])  #这里的hang=-1使得树的节点在下方对齐
+#将树分为3块
+rect.hclust(hc,k=3)  
+groups<-cutree(hc,k=3)
+
+基于密度的聚类
+library(fpc)
+iris2<-iris[-5]
+ds<-dbscan(iris2,eps=0.42,MinPts = 5)
+table(ds$cluster,iris$Species)
+#打印出ds和iris2的聚类散点图
+plot(ds,iris2)
+#打印出iris第一列和第四列为坐标轴的聚类结果
+plot(ds,iris2[,c(1,4)])
+#另一个表示聚类结果的函数，plotcluster
+plotcluster(iris2,ds$cluster)
+
+
+判别分析(Bayes判别，距离判别，Fisher判别)(少有包涉及了判别分析)
+R包里的lda函数进行判别，得到判别函数*
+    coronary_disease <- read.csv("coronary_disease.csv")
+    #把分组变量变为定性变量
+    group <- factor(coronary_disease$group)
+    #随机抽取20个一般样本做训练样本
+    #train <- sample(1:31,20)
+    #显示训练样本中各类的比例
+    #table(group[train])
+    #group作为分组变量，X1,X2作为判别变量，使用训练样本生成判别函数，先验概率各为50%
+    library(MASS)
+    Z <- lda(group~.,data = coronary_disease ,prior=c(1,1)/2) #subset=train
+    Z
+
+ 取原数据80%做train，20%做test，查看结果*
+coronary_disease <- read.csv("coronary_disease.csv")
+#读取行数
+N = length(coronary_disease$group)      
+#ind=1的是0.7概率出现的行，ind=2是0.3概率出现的行
+ind=sample(2,N,replace=TRUE,prob=c(0.8,0.2))
+#生成训练集(这里训练集和测试集随机设置为原数据集的80%,20%)
+coronary_train <- coronary_disease[ind==1,]
+#生成测试集
+coronary_test <- coronary_disease[ind==2,]
+#固定这个28分组
+set.seed(7)
+#可以看到这里的train中，i个1组，j个2组，共i+j个数据，则test里有(31-i-j个)数据
+i <- table(coronary_train$group)[[1]]
+j <- table(coronary_train$group)[[2]]
+i;j
